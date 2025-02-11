@@ -25,7 +25,7 @@
 </body>
 <script type="module">
 
-async function a() {
+async function read_vcf() {
 
         let n = 0;
         let nb = 0;
@@ -110,7 +110,7 @@ async function a() {
     // Initialize ag-Grid
     document.addEventListener("DOMContentLoaded", async function () {
         console.log("# DOM LOAD EVENT")
-        let [headerDef, rows] = await a();
+        let [headerDef, rows] = await read_vcf();
         const gridOptions2 = {
             columnDefs: headerDef,
             rowData: rows
