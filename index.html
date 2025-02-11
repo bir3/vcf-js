@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title<>Minimal HTML</title>
+    <script src="/dist/ag-grid-community.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .ag-theme-alpine {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello, World!</h1>
+    <div id="myGrid" class="ag-theme-alpine"></div>
+
+
+</body>
+<script type="module">
+
+async function a() {
+
+        let n = 0;
+        let nb = 0;
+        const response = await fetch("/dist/clinvar.vcf.10k");
+        let decoder = new TextDecoderStream('utf-8');
+        let r = response.body;
+        r = r.pipeThrough(decoder);
+        let s = "";
+        let headerDef = [];
+        let rows = [];
+        let ckeys = [];
+        let columns = [];
+        let lines = [];
+        function addLine(line) {
+            if (columns.length > 0) {
+                    let values = line.split("\t");
+                    let row = {};
+                    ckeys.forEach((key, i) => row[key] = values[i]);
+                    // POS hack
+                    let k = columns.findIndex( (x) => x == "POS");
+                    if (k >= 0) {
+                        row[ckeys[k]] = parseInt(values[k]);
+                    }
+                    rows.push(row);
+            }
+            if (line.startsWith("#")) {
+                columns = line.slice(1).split("\t"); // display name
+                ckeys = line.slice(1).split("\t"); // object key
+                console.log("found header line", columns.length);
+
+                for(let k=0; k<columns.length; k++) {
+                    let h = {headerName: columns[k], field: ckeys[k]};
+                    headerDef.push(h)
+                }
+            }
+        }
+        for await (const chunk of r) {
+            n += 1;
+            nb += chunk.length;
+            s += chunk;
+
+            while (s.length > 0) {
+                let i = s.indexOf("\n");
+                if (i < 0) break;  // incomplete chunk
+
+                let line = s.slice(0,i);
+                s = s.slice(i+1);
+
+                if (line.startsWith("##")) continue;
+                addLine(line);
+                lines.push(line);
+            }
+        }
+        if (s.length > 0) {
+            console.log("WARNING: missing newline, remaining data:", s)
+        }
+
+        return [headerDef, rows]
+    }
+    // why does ag-grid go away if we call a() below ???
+    // => DOM event then goes aways for some reason
+
+    // Define column and row data
+    const columnDefs = [
+        { headerName: "Make", field: "make" },
+        { headerName: "Model", field: "model" },
+        { headerName: "Price", field: "price" }
+    ];
+
+    const rowData = [
+        { make: "Toyota", model: "Corolla", price: 20000 },
+        { make: "Ford", model: "Focus", price: 22000 },
+        { make: "BMW", model: "X5", price: 50000 }
+    ];
+
+    // Create the grid
+    const gridOptions = {
+        columnDefs: columnDefs,
+        rowData: rowData
+    };
+
+    // Initialize ag-Grid
+    document.addEventListener("DOMContentLoaded", async function () {
+        console.log("# DOM LOAD EVENT")
+        let [headerDef, rows] = await a();
+        const gridOptions2 = {
+            columnDefs: headerDef,
+            rowData: rows
+        };
+
+        const gridDiv = document.getElementById("myGrid");
+        //new agGrid.createGrid(gridDiv, gridOptions);
+        new agGrid.createGrid(gridDiv, gridOptions2);
+
+    });
+
+
+</script>
+
+
+</html>
