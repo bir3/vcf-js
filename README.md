@@ -5,10 +5,7 @@ How to test:
 1. clone repo, `git clone https://github.com/bir3/vcf-js.git`
 2. make start
 
-# Appendix: grid links
-* list of grids: https://jsgrids.statico.io/
-* https://github.com/gabrielpetersson/fast-grid
-* https://github.com/scorredoira/VirtualGrid
-
-other:
-* https://datatables.net/
+# uses AG Grid:
+* https://www.ag-grid.com/
+* https://github.com/ag-grid/ag-grid
+  - file `ag-grid-community.js` inside `package/dist`
